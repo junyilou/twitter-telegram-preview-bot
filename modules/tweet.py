@@ -17,7 +17,7 @@ class User:
 		self.name: str = legacy["name"]
 		self.screen_name: str = legacy["screen_name"]
 		self.created: datetime = datetime.strptime(legacy["created_at"], DTFORMAT)
-		self.url: str = f"https://twitter.com/{self.screen_name}"
+		self.url: str = f"https://x.com/{self.screen_name}"
 
 		self.favourites_count: int = legacy["favourites_count"]
 		self.followers_count: int = legacy["followers_count"]
@@ -82,7 +82,7 @@ class Tweet:
 		assert dct["core"]["user_results"]["result"]["rest_id"] == self.user_id
 		self.user: User = User(dct["core"]["user_results"]["result"])
 		self.created: datetime = datetime.strptime(legacy["created_at"], DTFORMAT)
-		self.url: str = f"https://twitter.com/{self.user.screen_name}/status/{self.id}"
+		self.url: str = f"https://x.com/{self.user.screen_name}/status/{self.id}"
 
 		self.text_short: str = unescape(legacy["full_text"])
 		try:
@@ -126,7 +126,7 @@ class Tweet:
 			self.reply_user_id = legacy["in_reply_to_user_id_str"]
 			self.reply_user_name = next((i["name"] for i in legacy["entities"].get("user_mentions", []) if i["id_str"] == self.reply_user_id), None)
 			self.reply_user_screen_name = legacy["in_reply_to_screen_name"]
-			self.reply_url = f"https://twitter.com/{self.reply_user_screen_name}/status/{self.reply_id}"
+			self.reply_url = f"https://x.com/{self.reply_user_screen_name}/status/{self.reply_id}"
 
 		self.favourites_count: int = legacy["favorite_count"]
 		self.quote_count: int = legacy["quote_count"]

@@ -4,8 +4,9 @@ from .group import command_handler, group_handlers
 from .inline import inline_handler
 
 try:
-	from .personal import personal_handler
-	handler_group = [inline_handler, command_handler, personal_handler, *group_handlers]
+	from .personal import personal_handler, reverse_handler
+	handler_group = [inline_handler, command_handler,
+		personal_handler, reverse_handler, *group_handlers]
 except:
 	handler_group = [inline_handler, command_handler, *group_handlers]
 

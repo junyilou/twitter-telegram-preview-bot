@@ -61,7 +61,7 @@ class TweetModel:
 
 	def output_group(self, from_user: Literal[True] | User = True,
 		forward_user: Optional[str | User] = None) -> str:
-		body, shared = disMarkdown("\n\n".join([self.tweet.text, self.stat_str, self.tweet.url]), extra = "*"), ""
+		body, shared = disMarkdown("\n\n".join([self.tweet.text, self.stat_str, self.tweet.url]), extra = "`*"), ""
 		match from_user, forward_user:
 			case User(full_name = mu), str(du) | User(full_name = du):
 				shared = f"{disMarkdown(mu, wrap = "*", extra = "*")} 转发自 {disMarkdown(du, wrap = "*", extra = "*")}:"

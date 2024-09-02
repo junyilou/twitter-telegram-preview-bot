@@ -12,7 +12,7 @@ def bitsize(integer: int | float, width: int = 8, precision: int = 2, ks: float 
 	return f"{integer:{width}.{precision}f} {order[unit]:<2}"
 
 def disMarkdown(text: str, wrap: str = "", extra: str = "") -> str:
-	signs = "\\`|_{}[]()#@+-.!=<>~" + extra
+	signs = "\\|_{}[]()#@+-.!=<>~" + extra
 	text = text.translate({ord(s): f"\\{s}" for s in signs})
 	return wrap + text + wrap[::-1]
 

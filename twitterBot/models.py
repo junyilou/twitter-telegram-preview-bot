@@ -2,12 +2,11 @@ import re
 from datetime import datetime
 from typing import Any, Literal, Optional
 
+from modules.tweet import Tweet
+from modules.util import bitsize, browser_agent, disMarkdown, timeDelta
 from telegram import InputMediaPhoto, Message, User
 from telegram.constants import ParseMode
 from telegram.error import BadRequest
-
-from modules.tweet import Tweet
-from modules.util import bitsize, browser_agent, disMarkdown, timeDelta
 
 url_regex = re.compile(r"\b(twitter|x)\.com/(.*?)/status/(\d+)", re.I)
 

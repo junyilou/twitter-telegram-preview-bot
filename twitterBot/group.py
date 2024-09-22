@@ -2,14 +2,13 @@ import logging
 import re
 from typing import cast
 
+from modules.tweet import get_tweet
+from modules.util import disMarkdown
 from telegram import (ChatMemberAdministrator, InlineKeyboardButton,
                       InlineKeyboardMarkup, Message, MessageOriginHiddenUser,
                       MessageOriginUser, Update, User)
 from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes,
                           MessageHandler, filters)
-
-from modules.tweet import get_tweet
-from modules.util import disMarkdown
 
 from .models import TweetModel, generate_kwargs, match_send, url_regex
 from .permission import whitelist

@@ -162,9 +162,10 @@ class Tweet:
 def get_id(tweet_id: int | str) -> str:
 	return re.findall(r"[0-9]{16,}", str(tweet_id))[0]
 
-def login(email: str, username: str, password: str) -> None:
+def login(auth_token: str, ct0: str) -> None:
 	# refer to trevorhobenshield/twitter-api-client
-	scraper = Scraper(email, username, password)
+	# recommend to use normal sign in and save cookies from browser
+	scraper = Scraper(cookies = {"auth_token": auth_token, "ct0": ct0})
 	scraper.save_cookies("bot-scraper")
 
 def get_scrapper() -> Scraper:

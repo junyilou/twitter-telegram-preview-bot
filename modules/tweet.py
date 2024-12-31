@@ -197,7 +197,8 @@ async def get_thread(tweet_id: str, scraper: Optional[Scraper] = None, shout: bo
 			o.reply_url = o.reply.url
 	return dct.get(tweet_id)
 
-async def get_tweet(tweet_id: str, scraper: Optional[Scraper] = None, shout: bool = False) -> Optional[Tweet]:
+async def get_tweet(tweet_id: str, scraper: Optional[Scraper] = None,
+	retry: int = 3, shout: bool = False) -> Optional[Tweet]:
 	scraper = scraper or get_scrapper()
 	try:
 		i = int(tweet_id)
@@ -205,7 +206,11 @@ async def get_tweet(tweet_id: str, scraper: Optional[Scraper] = None, shout: boo
 		i = int(get_id(tweet_id))
 	l: list[int | str] = [i]
 	loop = asyncio.get_running_loop()
-	output = await loop.run_in_executor(None, scraper.tweets_by_id, l)
+	for _ in range(retry):
+		output = await loop.run_in_executor(None, scraper.tweets_by_id, l)
+		if output:
+			break
+		await asyncio.sleep(1)
 	try:
 		return Tweet(output[0]["data"]["tweetResult"]["result"], shout = shout)
 	except:

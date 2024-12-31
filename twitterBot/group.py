@@ -1,9 +1,9 @@
 import logging
-import re
 from typing import cast
 
-from modules.tweet import get_tweet
+# from modules.tweet import get_tweet
 from modules.util import disMarkdown
+from modules.vxtwitter import get_tweet
 from telegram import (ChatMemberAdministrator, InlineKeyboardButton,
                       InlineKeyboardMarkup, Message, MessageOriginHiddenUser,
                       MessageOriginUser, Update, User)
@@ -92,7 +92,7 @@ async def callback_main(message: Message, original: Message,
 		sent = await match_send(message, kwargs)
 	except Exception as exp:
 		logging.error(f"[发送推文失败] {model.tweet.id}: {exp!r}")
-		await message.reply_markdown_v2(disMarkdown(f"*未能处理你的请求*\nTweet ID: {model.tweet.id}"))
+		await message.reply_markdown_v2(disMarkdown(f"*未能发送你的请求*\nTweet ID: {model.tweet.id}"))
 
 	if message is not original:
 		await message.delete()

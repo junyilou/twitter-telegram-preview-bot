@@ -16,7 +16,7 @@ def disMarkdown(text: str, wrap: str = "", extra: str = "") -> str:
 	text = text.translate({ord(s): f"\\{s}" for s in signs})
 	return wrap + text + wrap[::-1]
 
-def timeDelta(*,
+def time_delta(*,
 	seconds: float = 0,
 	dt1: datetime = datetime.min,
 	dt2: datetime = datetime.min,

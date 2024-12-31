@@ -2,8 +2,9 @@ import re
 from datetime import datetime
 from typing import Any, Literal, Optional
 
-from modules.tweet import Tweet
-from modules.util import bitsize, browser_agent, disMarkdown, timeDelta
+# from modules.tweet import Tweet
+from modules.util import bitsize, browser_agent, disMarkdown, time_delta
+from modules.vxtwitter import Tweet
 from telegram import InputMediaPhoto, Message, User
 from telegram.constants import ParseMode
 from telegram.error import BadRequest
@@ -28,7 +29,7 @@ class TweetModel:
 
 	@property
 	def preview(self) -> str:
-		diff = timeDelta(dt1 = self.tweet.created, dt2 = datetime.now().astimezone(), items = 2)
+		diff = time_delta(dt1 = self.tweet.created, dt2 = datetime.now().astimezone(), items = 2)
 		return f"*来自* {self.user_str}\n*发表于* {diff} 前".strip()
 
 	async def download(self) -> dict[str, int]:

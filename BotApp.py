@@ -1,8 +1,10 @@
 import logging
-from twitterBot import handler_group
-from telegram.ext import ApplicationBuilder
 from warnings import filterwarnings
+
+from telegram.ext import ApplicationBuilder
 from telegram.warnings import PTBUserWarning
+
+from twitterBot import load
 
 token = "TOKEN" # Create your bot using @BotFather
 
@@ -17,7 +19,7 @@ def set_logger() -> None:
 def main() -> None:
 	filterwarnings(action = "ignore", message = r".*CallbackQueryHandler", category = PTBUserWarning)
 	bot = ApplicationBuilder().token(token).build()
-	bot.add_handlers(handler_group)
+	bot.add_handlers(load())
 	bot.run_polling()
 
 main()

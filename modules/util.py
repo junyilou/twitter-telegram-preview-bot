@@ -1,15 +1,10 @@
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
-browser_agent = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) \
-AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15"}
+import aiohttp
 
-def bitsize(integer: int | float, width: int = 8, precision: int = 2, ks: float = 1e3) -> str:
-	unit, order = 0, ("B", "KB", "MB", "GB", "TB")
-	while integer > ks and unit < len(order) - 1:
-		integer /= ks
-		unit += 1
-	return f"{integer:{width}.{precision}f} {order[unit]:<2}"
+browser_agent = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+	"AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15"}
 
 def disMarkdown(text: str, wrap: str = "", extra: str = "") -> str:
 	signs = "\\|_{}[]()#@+-.!=<>~" + extra
@@ -36,3 +31,10 @@ def time_delta(*,
 		if s < base:
 			break
 	return " ".join(ans[-1:-1-items:-1])
+
+async def request(url: str, mode: str) -> Any:
+	async with aiohttp.ClientSession() as session:
+		async with session.get(url, headers = browser_agent) as resp:
+			if mode == "json":
+				return await resp.json()
+			return await resp.text()

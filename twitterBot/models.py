@@ -6,8 +6,7 @@ from telegram import InputMediaPhoto, Message, User
 from telegram.constants import ParseMode
 from telegram.error import BadRequest
 
-# from modules.tweet import Tweet
-from modules.util import bitsize, browser_agent, disMarkdown, time_delta
+from modules.util import disMarkdown, time_delta
 from modules.vxtwitter import Tweet
 
 url_regex = re.compile(r"\b(twitter|x)\.com/(.*?)/status/(\d+)", re.I)
@@ -32,33 +31,6 @@ class TweetModel:
 	def preview(self) -> str:
 		diff = time_delta(dt1 = self.tweet.created, dt2 = datetime.now().astimezone(), items = 2)
 		return f"*来自* {self.user_str}\n*发表于* {diff} 前".strip()
-
-	async def download(self) -> dict[str, int]:
-		from modules.util import request
-		files: dict[str, int] = {}
-		for i, e in enumerate(self.tweet.entities):
-			filename = f"{self.tweet.entity_identifier}-{i + 1}.{e.format}"
-			try:
-				r = await request(e.url, mode = "raw", retry = 3, headers = browser_agent)
-				with open(f"twitter/{filename}", "wb") as w:
-					w.write(r)
-				files[filename] = len(r)
-			except:
-				files[filename] = 0
-		return files
-
-	async def output_private(self) -> tuple[str, bool]:
-		self.tweet = redirect(self.tweet)
-		outputs = ["*Twitter 下载*", self.preview, disMarkdown(self.tweet.url, extra = "*")]
-		if not self.tweet.entities:
-			success, failed = "", "推文没有媒体信息"
-		else:
-			files = await self.download()
-			success = "\n".join(f"{disMarkdown(filename)}: \\({disMarkdown(bitsize(size, width = 0, ks = 2 ** 10), wrap = "_")}\\)"
-				for filename, size in files.items() if size)
-			failed = "\n".join(disMarkdown(filename) for filename, size in files.items() if not size)
-		outputs.extend((f"{cat}\n{txt}") for cat, txt in zip(("*成功下载*", "*失败下载* \\#失败"), (success, failed)) if txt)
-		return "\n\n".join(outputs), any(failed)
 
 	def output_group(self, from_user: Literal[True] | User = True,
 		forward_user: Optional[str | User] = None) -> str:

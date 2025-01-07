@@ -14,7 +14,8 @@
 
 ### 依赖
 
-* [python-telegram-bot](): Python Telegram Bot 包装
+* [aiohttp](https://github.com/aio-libs/aiohttp): 异步网络请求
+* [python-telegram-bot](https://github.com/python-telegram-bot/python-telegram-bot): Python Telegram Bot 包装
 * ~~[twitter-api-client](https://github.com/trevorhobenshield/twitter-api-client): Python Twitter GraphQL API 包装~~
 
 通过 pypi 安装全部依赖:

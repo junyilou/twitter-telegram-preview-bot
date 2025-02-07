@@ -25,11 +25,11 @@ async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 		return
 
 	if items[0][0] == "twitter":
-		options = {"生成 twitter.com 链接（关闭预览）": ("twitter", TWITTER_LOGO),
-			"生成 vxtwitter.com 链接": ("vxtwitter", TELEGRAM_LOGO)}
+		options = {"生成关闭预览的链接": ("twitter", TWITTER_LOGO),
+			"生成 vxtwitter.com 的预览链接": ("vxtwitter", TELEGRAM_LOGO)}
 	else:
-		options = {"生成 x.com 链接（关闭预览）": ("x", X_LOGO),
-			"生成 fixvx.com 链接": ("fixvx", TELEGRAM_LOGO)}
+		options = {"生成关闭预览的链接": ("x", X_LOGO),
+			"生成 fixvx.com 的预览链接": ("fixvx", TELEGRAM_LOGO)}
 	results = [InlineQueryResultArticle(id = str(uuid4()),
 		title = title, description = (u := generate(items, prefix)),
 		thumbnail_url = thumb,

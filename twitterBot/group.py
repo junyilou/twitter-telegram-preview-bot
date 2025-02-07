@@ -1,19 +1,15 @@
 import logging
 from typing import cast
 
+from modules.util import disMarkdown
+from modules.vxtwitter import get_tweet
 from telegram import (ChatMemberAdministrator, InlineKeyboardButton,
                       InlineKeyboardMarkup, Message, MessageOriginHiddenUser,
                       MessageOriginUser, Update, User)
 from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes,
                           MessageHandler, filters)
 
-# from modules.tweet import get_tweet
-from modules.util import disMarkdown
-from modules.vxtwitter import get_tweet
-
 from .models import TweetModel, generate_kwargs, match_send, url_regex
-from .permission import whitelist
-
 
 async def entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 	try:
@@ -109,5 +105,5 @@ async def callback_main(message: Message, original: Message,
 		pass
 
 command_handler = CommandHandler(["x", "twitter"], entry)
-group_handlers = [MessageHandler(filters.Chat(chat_id = whitelist, allow_empty = True) & filters.Regex(url_regex), entry),
+group_handlers = [MessageHandler(filters.Regex(url_regex), entry),
 	CallbackQueryHandler(callback, pattern = "^TWEET")]

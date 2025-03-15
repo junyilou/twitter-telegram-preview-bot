@@ -42,7 +42,7 @@ async def entry_group(message: Message, model: TweetModel, context: ContextTypes
 	if message.forward_origin or " " not in message.text.strip():
 		keyboard[0].insert(0, InlineKeyboardButton("生成并删除", callback_data = f"TWEET ALL {model.tweet.id}"))
 	await message.reply_markdown_v2(text, disable_web_page_preview = True,
-		reply_markup = InlineKeyboardMarkup(keyboard), quote = False)
+		reply_markup = InlineKeyboardMarkup(keyboard), do_quote = False)
 	context.chat_data[model.tweet.id] = model, message
 
 async def entry_manual(message: Message, model: TweetModel) -> None:

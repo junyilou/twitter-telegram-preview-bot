@@ -2,12 +2,11 @@ import re
 from datetime import datetime
 from typing import Any, Literal, Optional
 
+from modules.util import bitsize, browser_agent, disMarkdown, time_delta
+from modules.vxtwitter import Tweet
 from telegram import InputMediaPhoto, Message, User
 from telegram.constants import ParseMode
 from telegram.error import BadRequest
-
-from modules.util import disMarkdown, time_delta
-from modules.vxtwitter import Tweet
 
 url_regex = re.compile(r"\b(twitter|x)\.com/(.*?)/status/(\d+)", re.I)
 
@@ -49,7 +48,7 @@ class TweetModel:
 		return "\n".join([shared, "", *video_strs, self.user_str, body])
 
 def generate_kwargs(tweet: Tweet, text: str) -> dict[str, Any]:
-	kwargs = {"parse_mode": ParseMode.MARKDOWN_V2, "quote": False}
+	kwargs = {"parse_mode": ParseMode.MARKDOWN_V2, "do_quote": False}
 	match len(tweet.entities):
 		case 0:
 			kwargs |= {"text": text, "disable_web_page_preview": True}
@@ -84,6 +83,6 @@ async def match_send(message: Message, kwargs: dict[str, Any]) -> Optional[Messa
 				sent = await message.reply_video(**kwargs)
 	except BadRequest:
 		if "caption" in kwargs:
-			kwargs = {"parse_mode": ParseMode.MARKDOWN_V2, "quote": False, "text": kwargs["caption"], "disable_web_page_preview": True}
+			kwargs = {"parse_mode": ParseMode.MARKDOWN_V2, "do_quote": False, "text": kwargs["caption"], "disable_web_page_preview": True}
 			sent = await message.reply_text(**kwargs)
 	return sent

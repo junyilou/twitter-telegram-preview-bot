@@ -25,7 +25,10 @@ class Entity:
 	def __init__(self, dct: dict[str, Any], idx: int) -> None:
 		self.idx: int = idx + 1
 		VXTABLE = {"image": "photo", "gif": "animated_gif"}
-		self.type: str = VXTABLE.get(dct["type"], dct["type"])
+		self.twitter_type = dct["type"]
+		if self.twitter_type not in VXTABLE:
+			raise ValueError(f"Unsupported Type: {self.twitter_type}")
+		self.type = VXTABLE[self.twitter_type]
 		if self.type == "photo":
 			search = re.search(r"http[s]://pbs\.twimg\.com/media/([^\.]+)\.([a-z]+)", dct["url"])
 			if not search:
@@ -42,8 +45,6 @@ class Entity:
 			self.image_url: str = dct["thumbnail_url"]
 			self.format: str = "mp4"
 			self.telegram_type = "video"
-		else:
-			raise ValueError(f"Unsupported Type: {self.type}")
 
 	def __repr__(self) -> str:
 		translate = {"photo": "Photo", "video": "Video", "animated_gif": "GIF"}

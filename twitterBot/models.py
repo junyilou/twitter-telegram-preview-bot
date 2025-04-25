@@ -56,8 +56,8 @@ def generate_kwargs(tweet: Tweet, text: str) -> dict[str, Any]:
 			e = tweet.entities[0]
 			kwargs |= {"caption": text, e.telegram_type: e.url, "has_spoiler": tweet.sensitive}
 		case _:
-			kwargs |= {"caption": text, "media": [InputMediaPhoto(media = m.image_url)
-				for m in tweet.entities if m.type == "photo"]}
+			kwargs |= {"caption": text, "media": [InputMediaPhoto(media = m.image_url,
+				has_spoiler = tweet.sensitive) for m in tweet.entities if m.type == "photo"]}
 	return kwargs
 
 def redirect(t: Tweet) -> Tweet:
@@ -83,6 +83,7 @@ async def match_send(message: Message, kwargs: dict[str, Any]) -> Optional[Messa
 				sent = await message.reply_video(**kwargs)
 	except BadRequest:
 		if "caption" in kwargs:
-			kwargs = {"parse_mode": ParseMode.MARKDOWN_V2, "do_quote": False, "text": kwargs["caption"], "disable_web_page_preview": True}
+			kwargs = {"parse_mode": ParseMode.MARKDOWN_V2, "do_quote": False,
+				"text": kwargs["caption"], "disable_web_page_preview": True}
 			sent = await message.reply_text(**kwargs)
 	return sent

@@ -11,6 +11,7 @@ from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes,
 
 from .models import TweetModel, generate_kwargs, match_send, url_regex
 
+
 async def entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 	try:
 		message = update.message

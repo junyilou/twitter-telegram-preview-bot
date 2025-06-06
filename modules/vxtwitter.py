@@ -129,6 +129,7 @@ def get_id(tweet_id: int | str) -> str:
 	return re.findall(r"[0-9]{16,}", str(tweet_id))[0]
 
 async def get_tweet(tweet_id: int | str, retry: int = 3, shout: bool = False, recursive: int = 0) -> Optional[Tweet]:
+	_retry = retry
 	try:
 		i = int(tweet_id)
 	except ValueError:
@@ -146,7 +147,7 @@ async def get_tweet(tweet_id: int | str, retry: int = 3, shout: bool = False, re
 			await asyncio.sleep(1)
 	if isinstance(tweet, Tweet):
 		if tweet.quote_id and recursive:
-			tweet.quote = await get_tweet(tweet.quote_id, retry = retry, shout = shout, recursive = recursive - 1)
+			tweet.quote = await get_tweet(tweet.quote_id, retry = _retry, recursive = recursive - 1)
 		if tweet.reply_id and recursive:
-			tweet.reply = await get_tweet(tweet.reply_id, retry = retry, shout = shout, recursive = recursive - 1)
+			tweet.reply = await get_tweet(tweet.reply_id, retry = _retry, recursive = recursive - 1)
 	return tweet

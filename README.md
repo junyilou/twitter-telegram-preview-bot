@@ -1,6 +1,6 @@
 # twitter-telegram-preview-bot
 
-![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
+![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)
 
 
 
@@ -10,9 +10,9 @@
 
 ## 效果图
 
-| 多图相册                      | 视频消息                      | 内联消息                       |
-| ----------------------------- | ----------------------------- | ------------------------------ |
-| ![多图相册](images/album.png) | ![视频消息](images/video.png) | ![内联消息](images/inline.png) |
+| 支持图片、视频                   | 支持引用、回复                      | Inline 美化 URL                    |
+| -------------------------------- | ----------------------------------- | ---------------------------------- |
+| ![media](images/media-group.png) | ![视频消息](images/quote-video.png) | ![内联消息](images/inline-url.png) |
 
 ## 搭建使用
 

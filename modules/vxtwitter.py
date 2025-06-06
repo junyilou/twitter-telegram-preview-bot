@@ -21,6 +21,11 @@ class User:
 	def __repr__(self) -> str:
 		return f"<User: {self.name} (@{self.screen_name})>"
 
+	def __eq__(self, other: Any) -> bool:
+		if not isinstance(other, User):
+			return NotImplemented
+		return self.screen_name == other.screen_name
+
 class Entity:
 	def __init__(self, dct: dict[str, Any], idx: int) -> None:
 		self.idx: int = idx + 1
@@ -73,22 +78,27 @@ class Tweet:
 			self.entities = []
 		self.entity_identifier: str = f"{self.user.screen_name}-{self.id}"
 
-		self.quote_id: Optional[str] = None
 		self.quote: Optional[Tweet] = None
-		self.retweet_id: Optional[str] = None
-		self.retweet: Optional[Tweet] = None
-		if (quote := dct.get("qrt")):
-			self.quote = Tweet(quote)
-			self.quote_id = self.quote.id
+		self.quote_id: Optional[str] = None
+		self.quote_url: Optional[str] = dct["qrtURL"]
+		self.quote_user_screen_name: Optional[str] = None
+		if self.quote_url:
+			self.quote_id = get_id(self.quote_url)
+			self.quote_url = f"https://x.com/i/status/{self.quote_id}"
+			if qdct := dct.get("qrt"):
+				self.quote = Tweet(qdct)
+				self.quote_user_screen_name = self.quote.user.screen_name
+				self.quote_url = self.quote.url
 
-		self.reply_user_screen_name: Optional[str] = None
 		self.reply: Optional[Tweet] = None
+		self.reply_id: Optional[str] = dct["replyingToID"]
 		self.reply_url: Optional[str] = None
-		if dct["conversationID"] != dct["tweetID"]:
-			self.reply_id = dct["conversationID"]
-			if (screen_name := re.search(r"^@?(\w){1,15}", self.text)):
-				self.reply_user_screen_name = screen_name.group().removeprefix("@")
-				self.reply_url = f"https://x.com/{self.reply_user_screen_name}/status/{self.reply_id}"
+		self.reply_user_screen_name: Optional[str] = dct["replyingTo"]
+		if self.reply_id:
+			self.reply_url = f"https://x.com/{self.reply_user_screen_name}/status/{self.reply_id}"
+
+		self.retweet: Optional[Tweet] = None
+		self.retweet_id: Optional[str] = None
 
 		self.favourites_count: int = dct["likes"]
 		self.reply_count: int = dct["replies"]
@@ -118,15 +128,25 @@ class Tweet:
 def get_id(tweet_id: int | str) -> str:
 	return re.findall(r"[0-9]{16,}", str(tweet_id))[0]
 
-async def get_tweet(tweet_id: str, retry: int = 3, shout: bool = False) -> Optional[Tweet]:
+async def get_tweet(tweet_id: int | str, retry: int = 3, shout: bool = False, recursive: int = 0) -> Optional[Tweet]:
 	try:
 		i = int(tweet_id)
 	except ValueError:
 		i = int(get_id(tweet_id))
 	url = f"https://api.vxtwitter.com/Twitter/status/{i}"
+	tweet: Optional[Tweet] = None
 	for _ in range(retry):
-		output = await request(url, mode = "json")
-		if output:
+		try:
+			output = await request(url, mode = "json", allow_redirects = False)
+			tweet = Tweet(output, shout = shout)
 			break
-		await asyncio.sleep(1)
-	return Tweet(output, shout = shout)
+		except Exception:
+			if shout:
+				raise
+			await asyncio.sleep(1)
+	if isinstance(tweet, Tweet):
+		if tweet.quote_id and recursive:
+			tweet.quote = await get_tweet(tweet.quote_id, retry = retry, shout = shout, recursive = recursive - 1)
+		if tweet.reply_id and recursive:
+			tweet.reply = await get_tweet(tweet.reply_id, retry = retry, shout = shout, recursive = recursive - 1)
+	return tweet

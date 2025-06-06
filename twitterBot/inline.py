@@ -5,8 +5,6 @@ from telegram.ext import ContextTypes, InlineQueryHandler
 
 from .models import url_regex
 
-TWITTER_LOGO = "https://pbs.twimg.com/profile_images/1684204252149714947/ba3EVaom.jpg"
-X_LOGO = "https://pbs.twimg.com/profile_images/1683899100922511378/5lY42eHs.jpg"
 TELEGRAM_LOGO = "https://pbs.twimg.com/profile_images/1183117696730390529/LRDASku7.jpg"
 
 def generate(items: list[tuple[str, str, str]], prefix: str, sep: str = "\n") -> str:
@@ -25,11 +23,9 @@ async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 		return
 
 	if items[0][0] == "twitter":
-		options = {"生成关闭预览的链接": ("twitter", TWITTER_LOGO),
-			"生成 vxtwitter.com 的预览链接": ("vxtwitter", TELEGRAM_LOGO)}
+		options = {"生成 vxtwitter.com 的预览链接": ("vxtwitter", TELEGRAM_LOGO)}
 	else:
-		options = {"生成关闭预览的链接": ("x", X_LOGO),
-			"生成 fixvx.com 的预览链接": ("fixvx", TELEGRAM_LOGO)}
+		options = {"生成 fixvx.com 的预览链接": ("fixvx", TELEGRAM_LOGO)}
 	results = [InlineQueryResultArticle(id = str(uuid4()),
 		title = title, description = (u := generate(items, prefix)),
 		thumbnail_url = thumb,

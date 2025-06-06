@@ -99,10 +99,8 @@ def redirect(t: Tweet) -> Tweet:
 			break
 	return t
 
-async def match_send(message: Message, kwargs: dict[str, Any],
-	reply_to_id: Optional[int] = None) -> Optional[Message]:
+async def match_send(message: Message, kwargs: dict[str, Any]) -> Optional[Message]:
 	sent = None
-	kwargs["reply_to_message_id"] = reply_to_id
 	try:
 		match kwargs:
 			case {"text": _}:

@@ -87,8 +87,10 @@ async def callback_main(message: Message, original: Message,
 	kwargs = generate_kwargs(tweet, text)
 	if mode == "ALL" and (rply := original.reply_to_message):
 		kwargs["reply_to_message_id"] = rply.id
+	elif mode.startswith("_"):
+		kwargs["reply_to_message_id"] = original.id
 	try:
-		sent = await match_send(message, kwargs, reply_to_id = original.id if mode.startswith("_") else None)
+		sent = await match_send(message, kwargs)
 	except Exception as exp:
 		logging.error(f"[发送推文失败] {tweet.id}: {exp!r}")
 		await message.reply_markdown_v2(disMarkdown(f"*未能发送你的请求*\nTweet ID: {tweet.id}"))

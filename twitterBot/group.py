@@ -93,10 +93,15 @@ async def callback_main(message: Message, original: Message,
 		logging.error(f"[发送推文失败] {tweet.id}: {exp!r}")
 		await message.reply_markdown_v2(disMarkdown(f"*未能发送你的请求*\nTweet ID: {tweet.id}"))
 
-	if message is not original:
+	if message is not original and not mode.startswith("_"):
 		await message.delete()
 	if mode.startswith("_"):
-		await message.edit_reply_markup()
+		new_buttons = []
+		if k := message.reply_markup:
+			row = k.inline_keyboard[0]
+			new_buttons.extend(b for b in row if tweet.id not in str(b.callback_data))
+		new_markup = InlineKeyboardMarkup([new_buttons]) if new_buttons else None
+		await message.edit_reply_markup(new_markup)
 	try:
 		assert mode == "ALL", "no deletion required"
 		assert sent and sent.from_user

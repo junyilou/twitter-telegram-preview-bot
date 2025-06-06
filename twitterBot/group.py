@@ -2,14 +2,14 @@ import logging
 from typing import cast
 
 from modules.util import disMarkdown
-from modules.vxtwitter import get_tweet
+from modules.vxtwitter import Tweet, get_tweet
 from telegram import (ChatMemberAdministrator, InlineKeyboardButton,
                       InlineKeyboardMarkup, Message, MessageOriginHiddenUser,
                       MessageOriginUser, Update, User)
 from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes,
                           MessageHandler, filters)
 
-from .models import TweetModel, generate_kwargs, match_send, url_regex
+from .models import generate_kwargs, match_send, output, preview, url_regex
 
 
 async def entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -23,32 +23,30 @@ async def entry(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 	is_private = message.chat_id == message.from_user.id
 	for _, _, tid in url_regex.findall(message.text):
 		try:
-			tweet = await get_tweet(tweet_id = tid, shout = True)
-			assert tweet
-			model = TweetModel(tweet)
+			assert (tweet := await get_tweet(tweet_id = tid, shout = True, recursive = 1))
 		except Exception as exp:
 			logging.error(f"[处理推文失败] {tid}: {exp!r}")
 			await message.reply_markdown_v2(disMarkdown(f"*未能处理你的请求*\nTweet ID: {tid}"))
 			continue
 		if is_private:
-			await entry_manual(message, model)
+			await entry_manual(message, tweet)
 		else:
-			await entry_group(message, model, context)
+			await entry_group(message, tweet, context)
 
-async def entry_group(message: Message, model: TweetModel, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def entry_group(message: Message, tweet: Tweet, context: ContextTypes.DEFAULT_TYPE) -> None:
 	assert context.chat_data is not None and message.text is not None
-	text = f"*要生成推文预览吗？*\n\n{model.preview}"
-	keyboard = [[InlineKeyboardButton("生成", callback_data = f"TWEET YES {model.tweet.id}"),
-		InlineKeyboardButton("忽略", callback_data = f"TWEET NO {model.tweet.id}")]]
+	text = f"*要生成推文预览吗？*\n\n{preview(tweet)}"
+	keyboard = [[InlineKeyboardButton("生成", callback_data = f"TWEET YES {tweet.id}"),
+		InlineKeyboardButton("忽略", callback_data = f"TWEET NO {tweet.id}")]]
 	if message.forward_origin or " " not in message.text.strip():
-		keyboard[0].insert(0, InlineKeyboardButton("生成并删除", callback_data = f"TWEET ALL {model.tweet.id}"))
+		keyboard[0].insert(0, InlineKeyboardButton("生成并删除", callback_data = f"TWEET ALL {tweet.id}"))
 	await message.reply_markdown_v2(text, disable_web_page_preview = True,
 		reply_markup = InlineKeyboardMarkup(keyboard), do_quote = False)
-	context.chat_data[model.tweet.id] = model, message
+	context.chat_data[tweet.id] = tweet, message
 
-async def entry_manual(message: Message, model: TweetModel) -> None:
+async def entry_manual(message: Message, tweet: Tweet) -> None:
 	assert message.from_user is not None
-	await callback_main(message, message, message.from_user, model, "YES")
+	await callback_main(message, message, message.from_user, tweet, "YES")
 
 async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 	try:
@@ -63,18 +61,21 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 		return
 
 	if tid not in context.chat_data:
-		await message.reply_markdown_v2(disMarkdown(f"*请重新发起你的请求*\nTweet ID: {tid}"))
-		await message.edit_reply_markup()
-		return
+		tweet = await get_tweet(tweet_id = tid, shout = True, recursive = 1)
+		if not tweet:
+			await message.reply_markdown_v2(disMarkdown(f"*未能处理你的请求*\nTweet ID: {tid}"))
+			return
+		context.chat_data[tid] = tweet, message
 	if mode == "NO":
 		await message.delete()
 		return
-	model, original = cast(tuple[TweetModel, Message], context.chat_data[tid])
-	await message.edit_text("请稍候……")
-	await callback_main(message, original, query.from_user, model, mode)
+	tweet, original = cast(tuple[Tweet, Message], context.chat_data[tid])
+	if not mode.startswith("_"):
+		await message.edit_text("请稍候……")
+	await callback_main(message, original, query.from_user, tweet, mode)
 
 async def callback_main(message: Message, original: Message,
-	user: User, model: TweetModel, mode: str) -> None:
+	user: User, tweet: Tweet, mode: str) -> None:
 	match original.forward_origin:
 		case MessageOriginUser(sender_user = usr):
 			fwd = usr
@@ -82,18 +83,20 @@ async def callback_main(message: Message, original: Message,
 			fwd = usr_name
 		case _:
 			fwd = None
-	text = model.output_group(from_user = mode != "ALL" or user, forward_user = fwd)
-	kwargs = generate_kwargs(model.tweet, text)
+	text = output(tweet, from_user = mode != "ALL" or user, forward_user = fwd)
+	kwargs = generate_kwargs(tweet, text)
 	if mode == "ALL" and (rply := original.reply_to_message):
 		kwargs["reply_to_message_id"] = rply.id
 	try:
-		sent = await match_send(message, kwargs)
+		sent = await match_send(message, kwargs, reply_to_id = original.id if mode.startswith("_") else None)
 	except Exception as exp:
-		logging.error(f"[发送推文失败] {model.tweet.id}: {exp!r}")
-		await message.reply_markdown_v2(disMarkdown(f"*未能发送你的请求*\nTweet ID: {model.tweet.id}"))
+		logging.error(f"[发送推文失败] {tweet.id}: {exp!r}")
+		await message.reply_markdown_v2(disMarkdown(f"*未能发送你的请求*\nTweet ID: {tweet.id}"))
 
 	if message is not original:
 		await message.delete()
+	if mode.startswith("_"):
+		await message.edit_reply_markup()
 	try:
 		assert mode == "ALL", "no deletion required"
 		assert sent and sent.from_user
@@ -102,7 +105,7 @@ async def callback_main(message: Message, original: Message,
 		assert isinstance(admin, ChatMemberAdministrator), "not an administrator"
 		assert admin.can_delete_messages, "cant be deleted message"
 		await original.delete()
-	except:
+	except Exception:
 		pass
 
 command_handler = CommandHandler(["x", "twitter"], entry)

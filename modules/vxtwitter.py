@@ -133,7 +133,7 @@ async def get_tweet(tweet_id: int | str, retry: int = 3, shout: bool = False, re
 		i = int(tweet_id)
 	except ValueError:
 		i = int(get_id(tweet_id))
-	url = f"https://api.vxtwitter.com/Twitter/status/{i}"
+	url = f"https://api.vxtwitter.com/i/status/{i}"
 	tweet: Optional[Tweet] = None
 	for _ in range(retry):
 		try:

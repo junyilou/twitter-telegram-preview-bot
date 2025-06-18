@@ -6,6 +6,7 @@ from modules.vxtwitter import Tweet, get_tweet
 from telegram import (ChatMemberAdministrator, InlineKeyboardButton,
                       InlineKeyboardMarkup, Message, MessageOriginHiddenUser,
                       MessageOriginUser, Update, User)
+from telegram.error import BadRequest
 from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes,
                           MessageHandler, filters)
 
@@ -60,6 +61,10 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 	except AssertionError:
 		return
 
+	if query.data == context.chat_data.get("__LAST__"):
+		return
+	context.chat_data["__LAST__"] = query.data
+
 	if tid not in context.chat_data:
 		tweet = await get_tweet(tweet_id = tid, shout = True, recursive = 1)
 		if not tweet:
@@ -103,7 +108,11 @@ async def callback_main(message: Message, original: Message,
 			row = k.inline_keyboard[0]
 			new_buttons.extend(b for b in row if tweet.id not in str(b.callback_data))
 		new_markup = InlineKeyboardMarkup([new_buttons]) if new_buttons else None
-		await message.edit_reply_markup(new_markup)
+		try:
+			assert new_markup != message.reply_markup
+			await message.edit_reply_markup(new_markup)
+		except (AssertionError, BadRequest):
+			pass
 	try:
 		assert mode == "ALL", "no deletion required"
 		assert sent and sent.from_user

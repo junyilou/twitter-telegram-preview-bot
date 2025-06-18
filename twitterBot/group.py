@@ -58,12 +58,9 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 		assert query.data
 		_, mode, tid = query.data.split(" ")
 		assert context.chat_data is not None
+		assert query.data != context.chat_data.get("__LAST__")
 	except AssertionError:
 		return
-
-	if query.data == context.chat_data.get("__LAST__"):
-		return
-	context.chat_data["__LAST__"] = query.data
 
 	if tid not in context.chat_data:
 		tweet = await get_tweet(tweet_id = tid, shout = True, recursive = 1)
@@ -78,6 +75,7 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 	if not mode.startswith("_"):
 		await message.edit_text("请稍候……")
 	await callback_main(message, original, query.from_user, tweet, mode)
+	context.chat_data["__LAST__"] = query.data
 
 async def callback_main(message: Message, original: Message,
 	user: User, tweet: Tweet, mode: str) -> None:

@@ -62,15 +62,22 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 	except AssertionError:
 		return
 
-	if tid not in context.chat_data:
-		tweet = await get_tweet(tweet_id = tid, shout = True, recursive = 1)
-		if not tweet:
-			await message.reply_markdown_v2(disMarkdown(f"*未能处理你的请求*\nTweet ID: {tid}"))
-			return
-		context.chat_data[tid] = tweet, message
 	if mode == "NO":
 		await message.delete()
 		return
+	if mode == "IGNORE":
+		try:
+			await message.edit_reply_markup()
+		except BadRequest:
+			pass
+		return
+	if tid not in context.chat_data:
+		try:
+			assert (tweet := await get_tweet(tweet_id = tid, shout = True, recursive = 1))
+		except Exception:
+			await message.reply_markdown_v2(disMarkdown(f"*未能处理你的请求*\nTweet ID: {tid}"))
+			return
+		context.chat_data[tid] = tweet, message
 	tweet, original = cast(tuple[Tweet, Message], context.chat_data[tid])
 	if not mode.startswith("_"):
 		await message.edit_text("请稍候……")
@@ -104,7 +111,7 @@ async def callback_main(message: Message, original: Message,
 		new_buttons = []
 		if k := message.reply_markup:
 			row = k.inline_keyboard[0]
-			new_buttons.extend(b for b in row if tweet.id not in str(b.callback_data))
+			new_buttons.extend(b for b in row if all(s not in str(b.callback_data) for s in (tweet.id, "IGNORE")))
 		new_markup = InlineKeyboardMarkup([new_buttons]) if new_buttons else None
 		try:
 			assert new_markup != message.reply_markup

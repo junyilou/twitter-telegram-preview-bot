@@ -69,13 +69,18 @@ def generate_kwargs(tweet: Tweet, text: str) -> dict[str, Any]:
 			assert len(tweet.entities) <= 1
 		except AssertionError:
 			return {}
-		buttons = []
+		buttons = [[]]
 		if rid := tweet.reply_id:
-			buttons.append(InlineKeyboardButton("补充回复内容", callback_data = f"TWEET _YES {rid}"))
+			buttons[0].append(InlineKeyboardButton("补充回复内容", callback_data = f"TWEET _YES {rid}"))
 		if qid := tweet.quote_id:
-			buttons.append(InlineKeyboardButton("补充引用内容", callback_data = f"TWEET _YES {qid}"))
-		if buttons:
-			return {"reply_markup": InlineKeyboardMarkup([buttons])}
+			buttons[0].append(InlineKeyboardButton("补充引用内容", callback_data = f"TWEET _YES {qid}"))
+		if buttons[0]:
+			button = InlineKeyboardButton("忽略补充内容", callback_data = f"TWEET IGNORE _")
+			if len(buttons[0]) > 1:
+				buttons.append([button])
+			else:
+				buttons[0].append(button)
+			return {"reply_markup": InlineKeyboardMarkup(buttons)}
 		return {}
 
 	kwargs = {"parse_mode": ParseMode.MARKDOWN_V2, "do_quote": False}
